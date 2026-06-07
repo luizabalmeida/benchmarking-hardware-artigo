@@ -1,0 +1,3 @@
+operacao,bandwidth_mbs,latencia_media_ms,latencia_max_ms
+leitura,32285.93,0.03,0.06
+escrita,31807.66,0.03,0.07

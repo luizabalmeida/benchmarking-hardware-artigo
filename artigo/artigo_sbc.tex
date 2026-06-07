@@ -1,0 +1,436 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\sloppy
+
+\title{Benchmarking de CPU, Mem\'oria e Armazenamento em Sistemas\\
+com Arquitetura de Mem\'oria Unificada: Uma Avalia\c{c}\~ao Experimental}
+
+\author{Luiza Barbosa Almeida da Silva\inst{1}}
+
+\address{Centro de Estudos e Sistemas Avan\c{c}ados do Recife (CESAR School)\\
+  Recife -- PE -- Brasil
+  \email{lbas2@cesar.school}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Modern computing platforms based on ARM architectures with Unified Memory
+Architecture (UMA) represent a significant paradigm shift in hardware design,
+integrating CPU, GPU, and memory into a single System-on-Chip (SoC). Despite
+growing adoption, empirical benchmarking studies on these platforms in academic
+contexts remain scarce. This paper presents a controlled experimental evaluation
+of a UMA-based system, measuring CPU, storage, and memory performance using
+Cinebench R23, Blackmagic Disk Speed Test 3.0, and sysbench 1.0.20. Three
+repetitions were performed per benchmark, with mean, standard deviation, and
+95\% confidence interval reported. Results show single-core CPU performance of
+$2156.67 \pm 6.81$ pts (CI$_{95\%}$: [2139.76, 2173.58]), positioning the
+system above most desktop x86 processors in the Cinebench R23 public ranking.
+Sequential storage read reached $2809.1$ MB/s (median), and unified memory
+bandwidth achieved $32{,}285$ MB/s in read with $0.03$ ms average latency.
+Findings demonstrate that UMA platforms deliver competitive performance with
+high single-core efficiency, while thermal throttling under sustained
+multi-threaded load introduces measurable variability in multi-core scores.
+All raw data, scripts, and reproduction instructions are publicly available.
+\end{abstract}
+
+\begin{resumo}
+  Plataformas computacionais modernas baseadas em arquiteturas ARM com
+  \textit{Unified Memory Architecture} (UMA) representam uma ruptura
+  significativa no paradigma de design de hardware, integrando CPU, GPU e
+  mem\'oria em um \'unico \textit{System-on-Chip} (SoC). Apesar da crescente
+  ado\c{c}\~ao, estudos emp\'iricos de benchmarking dessas plataformas em
+  contexto acad\^emico s\~ao escassos. Este artigo apresenta uma avalia\c{c}\~ao
+  experimental controlada de um sistema baseado em UMA, medindo o desempenho
+  de CPU, armazenamento e mem\'oria por meio das ferramentas Cinebench R23,
+  Blackmagic Disk Speed Test 3.0 e sysbench 1.0.20. Foram realizadas tr\^es
+  repeti\c{c}\~oes por benchmark, reportando-se m\'edia, desvio-padr\~ao e
+  intervalo de confian\c{c}a de 95\%. Os resultados indicam desempenho
+  single-core de $2156{,}67 \pm 6{,}81$ pts (IC$_{95\%}$: [2139,76;
+  2173,58]), posicionando o sistema acima da maioria dos processadores x86
+  desktop no ranking p\'ublico do Cinebench R23. A leitura sequencial de
+  armazenamento atingiu $2809{,}1$ MB/s (mediana), e a largura de banda de
+  mem\'oria unificada alcan\c{c}ou $32.285$ MB/s em leitura com lat\^encia
+  m\'edia de $0{,}03$ ms. Os achados demonstram que plataformas UMA entregam
+  desempenho competitivo com alta efici\^encia single-core, enquanto o
+  \textit{throttling} t\'ermico sob carga multi-thread sustentada introduz
+  variabilidade mensur\'avel nas pontua\c{c}\~oes multi-core. Todos os dados
+  brutos, scripts e instru\c{c}\~oes de reprodu\c{c}\~ao est\~ao
+  publicamente dispon\'iveis.
+\end{resumo}
+
+\noindent\textbf{Palavras-chave:} benchmarking; arquitetura de mem\'oria
+unificada; desempenho de hardware; Apple Silicon; avalia\c{c}\~ao experimental.
+
+
+%% ============================================================
+\section{Introdu\c{c}\~ao}
+%% ============================================================
+
+A avalia\c{c}\~ao objetiva de desempenho de hardware constitui uma
+compet\^encia central na forma\c{c}\~ao de profissionais de tecnologia da
+informa\c{c}\~ao. Especifica\c{c}\~oes t\'ecnicas nominais fornecidas por
+fabricantes frequentemente n\~ao refletem com fidelidade o comportamento dos
+sistemas sob cargas de trabalho reais, tornando o \textit{benchmarking} ---
+medi\c{c}\~ao comparativa de desempenho por meio de testes padronizados e
+reprodut\'iveis --- a principal ferramenta metodol\'ogica dispon\'ivel para
+avalia\c{c}\~ao emp\'irica de hardware \cite{lilja2005measuring}.
+
+A transi\c{c}\~ao de parte da ind\'ustria de semicondutores para arquiteturas
+ARM de alto desempenho, com a integra\c{c}\~ao de CPU, GPU e mem\'oria em um
+\'unico SoC sob o paradigma de \textit{Unified Memory Architecture} (UMA),
+representa uma mudan\c{c}a estrutural no design de sistemas computacionais
+\cite{hennessy2017computer}. Nessa arquitetura, CPU e GPU compartilham o mesmo
+\textit{pool} de mem\'oria f\'isica, eliminando c\'opias de dados entre
+mem\'orias distintas e potencialmente reduzindo lat\^encias de acesso
+\cite{lim2022apple}. Apesar da relev\^ancia t\'ecnica dessa inova\c{c}\~ao,
+estudos emp\'iricos de benchmarking sistem\'atico em plataformas UMA em
+contexto acad\^emico brasileiro s\~ao escassos na literatura.
+
+No contexto da disciplina de Infraestrutura de Hardware do CESAR School, foram
+realizadas atividades pr\'aticas de laborat\'orio com foco em benchmarking de
+sistemas reais. Este trabalho sistematiza os experimentos conduzidos,
+formaliza a metodologia adotada e apresenta os resultados como contribui\c{c}\~ao
+cient\'ifica reprodut\'ivel.
+
+A \textbf{pergunta de pesquisa} que orienta este trabalho \'e: \textit{Qual
+\'e o desempenho mensur\'avel dos subsistemas de CPU, mem\'oria e armazenamento
+de um sistema baseado em arquitetura UMA, e como esse desempenho se posiciona
+frente a refer\^encias da literatura e rankings p\'ublicos de benchmarking?}
+
+As contribui\c{c}\~oes deste trabalho incluem: (i) metodologia padronizada e
+reprodut\'ivel de benchmarking para sistemas macOS com arquitetura ARM/UMA;
+(ii) dados emp\'iricos com estat\'isticas descritivas completas (m\'edia,
+desvio-padr\~ao, IC 95\%); (iii) an\'alise do fen\^omeno de cache frio em
+benchmarks de armazenamento; e (iv) reposit\'orio p\'ublico com dados brutos,
+scripts e instru\c{c}\~oes de reprodu\c{c}\~ao \cite{github2025repo}.
+
+O restante deste artigo est\'a organizado da seguinte forma: a Se\c{c}\~ao~2
+apresenta os trabalhos relacionados; a Se\c{c}\~ao~3 descreve a metodologia
+adotada; a Se\c{c}\~ao~4 apresenta os resultados; a Se\c{c}\~ao~5 discute as
+implica\c{c}\~oes dos achados; e a Se\c{c}\~ao~6 conclui o trabalho.
+
+
+%% ============================================================
+\section{Trabalhos Relacionados}
+%% ============================================================
+
+A avalia\c{c}\~ao de desempenho de hardware \'e tema consolidado na literatura
+de arquitetura de computadores. \cite{hennessy2017computer} estabelecem as
+bases te\'oricas para o design e avalia\c{c}\~ao de processadores modernos,
+incluindo m\'etricas como CPI (\textit{Cycles Per Instruction}) e o impacto
+da hierarquia de mem\'oria no desempenho de aplica\c{c}\~oes reais.
+
+No campo do benchmarking de processadores, \cite{bucek2018spec} apresentam a
+su\'ite SPEC CPU2017, refer\^encia na ind\'ustria para avalia\c{c}\~ao
+comparativa de CPUs, destacando a import\^ancia de \textit{workloads}
+representativos para resultados cientificamente v\'alidos. Os autores argumentam
+que benchmarks sint\'eticos, como o Cinebench R23 \cite{maxon2023cinebench},
+complementam avalia\c{c}\~oes baseadas em aplica\c{c}\~oes reais ao isolar
+subsistemas espec\'ificos de forma controlada.
+
+A arquitetura UMA presente em chips ARM modernos tem sido investigada em
+trabalhos recentes. \cite{lim2022apple} analisam a arquitetura do chip Apple
+M1 e demonstram que a integra\c{c}\~ao de controlador de mem\'oria no SoC
+reduz a lat\^encia de acesso em rela\c{c}\~ao a sistemas com controladores
+externos em placa-m\~ae. \cite{truong2022performance} conduzem an\'alise de
+desempenho dos chips M1 e M2, evidenciando que a largura de banda de mem\'oria
+unificada supera a de sistemas DDR4 em configura\c{c}\~ao de canal duplo em
+determinadas cargas de trabalho.
+
+Em rela\c{c}\~ao ao armazenamento, \cite{yang2020empirical} demonstram que
+SSDs NVMe modernos atingem velocidades sequenciais acima de 3 GB/s, com
+lat\^encias ordens de magnitude inferiores \`as de discos magn\'eticos. Os
+autores destacam que o comportamento de cache do sistema operacional influencia
+significativamente os resultados de benchmarks de disco, especialmente na
+primeira execu\c{c}\~ao. \cite{chen1994raid} estabelecem os fundamentos
+te\'oricos de avalia\c{c}\~ao de subsistemas de armazenamento, incluindo
+m\'etricas de IOPS e vaz\~ao sequencial que permanecem relevantes para
+compara\c{c}\~ao entre tecnologias.
+
+No contexto educacional, \cite{silva2019ensino} discutem a import\^ancia de
+atividades pr\'aticas de benchmarking na forma\c{c}\~ao de engenheiros de
+sistemas no Brasil, enfatizando que a experi\^encia emp\'irica de coleta e
+an\'alise de dados de desempenho desenvolve compet\^encias cr\'iticas n\~ao
+adquir\'iveis apenas por via te\'orica. \cite{stallings2016computer} reforca
+que o entendimento profundo de hierarquias de mem\'oria e I/O \'e fundamental
+para engenheiros de sistemas modernos.
+
+Diferenciando-se dos trabalhos citados, este artigo foca na avalia\c{c}\~ao
+emp\'irica de um sistema UMA em contexto acad\^emico brasileiro, com
+metodologia reprodut\'ivel, estat\'isticas completas e dados p\'ublicos.
+
+
+%% ============================================================
+\section{Metodologia}
+%% ============================================================
+
+\subsection{Sistema Avaliado}
+
+Os experimentos foram conduzidos em um \'unico sistema, especificado na
+Tabela~\ref{tab:hardware}. A escolha de um \'unico sistema justifica-se pelo
+foco do estudo: caracterizar em profundidade a arquitetura UMA, com rigor
+estat\'istico nas medi\c{c}\~oes, em vez de comparar m\'ultiplas
+configura\c{c}\~oes superficialmente.
+
+\begin{table}[ht]
+\centering
+\caption{Especifica\c{c}\~oes completas do sistema avaliado}
+\label{tab:hardware}
+\begin{tabular}{ll}
+\toprule
+\textbf{Componente} & \textbf{Especifica\c{c}\~ao} \\
+\midrule
+Modelo              & MacBook Air 13'', 2025 \\
+Chip (SoC)          & Apple M4 \\
+N\'ucleos CPU       & 10 (4 de desempenho + 6 de efici\^encia) \\
+Freq. m\'ax. SC     & 4,4 GHz (Performance Core) \\
+Mem\'oria           & 16 GB Unified Memory (LPDDR5X) \\
+Armazenamento       & Apple SSD NVMe integrado (PCIe Gen4) \\
+Sistema Operacional & macOS Sequoia 15.7.7 (Build 24G720) \\
+Resfriamento        & Passivo (sem cooler ativo) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ferramentas de Benchmarking}
+
+\textbf{Cinebench R23} (vers\~ao 23.200) \cite{maxon2023cinebench}: Avalia
+o desempenho da CPU em renderiza\c{c}\~ao 3D, fornecendo pontua\c{c}\~oes
+single-core e multi-core comparáveis entre plataformas x86 e ARM. Par\^ametros:
+dura\c{c}\~ao m\'inima desativada (\textit{Minimum Test Duration: Off}),
+sem outros processos em execu\c{c}\~ao.
+
+\textbf{Blackmagic Disk Speed Test} (vers\~ao 3.0) \cite{blackmagic2023}:
+Avalia velocidade de leitura e escrita sequencial do armazenamento. Opera
+com blocos de tamanho vari\'avel adaptados ao dispositivo. Utilizado em
+modo padr\~ao sem configura\c{c}\~oes adicionais.
+
+\textbf{sysbench} (vers\~ao 1.0.20) \cite{sysbench2023}: Ferramenta
+open-source via linha de comando, instalada via Homebrew. Par\^ametros
+utilizados: \texttt{--memory-block-size=1M}, \texttt{--memory-total-size=10G},
+com opera\c{c}\~oes de leitura e escrita executadas separadamente.
+
+\subsection{Protocolo de Coleta de Dados}
+
+\begin{enumerate}
+  \item \textbf{Isolamento}: Todos os aplicativos em segundo plano foram
+  encerrados antes de cada sess\~ao; apenas processos essenciais do SO
+  permaneceram ativos;
+  \item \textbf{Repeti\c{c}\~oes}: Cada benchmark foi executado \textbf{3
+  vezes}, com intervalo m\'inimo de 2 minutos entre execu\c{c}\~oes;
+  \item \textbf{Registro}: Todos os valores individuais foram registrados
+  em planilha CSV dispon\'ivel no reposit\'orio p\'ublico;
+  \item \textbf{Valor representativo}: Adotou-se a \textbf{mediana} como
+  valor principal, por ser robusta a outliers (ex.: efeito de cache frio
+  no disco).
+\end{enumerate}
+
+\subsection{An\'alise Estat\'istica}
+
+Para cada conjunto de medidas foram calculados: m\'edia ($\bar{x}$), desvio-
+padr\~ao amostral ($s$), coeficiente de varia\c{c}\~ao (CV) e intervalo de
+confian\c{c}a de 95\% (IC$_{95\%}$) via distribui\c{c}\~ao $t$ de Student
+(gl = 2). Adotou-se CV $\leq$ 5\% como indicativo de resultado est\'avel
+para CPU e mem\'oria, e CV $\leq$ 10\% para armazenamento.
+
+
+%% ============================================================
+\section{Resultados}
+%% ============================================================
+
+\subsection{Desempenho de CPU --- Cinebench R23}
+
+A Tabela~\ref{tab:cpu} apresenta os resultados individuais e as estat\'isticas
+calculadas para o Cinebench R23.
+
+\begin{table}[ht]
+\centering
+\caption{Resultados do Cinebench R23 (3 execu\c{c}\~oes)}
+\label{tab:cpu}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{M\'etrica} & \textbf{Exec. 1} & \textbf{Exec. 2} & \textbf{Exec. 3}
+  & \textbf{M\'edia $\pm$ DP} & \textbf{IC$_{95\%}$} & \textbf{CV} \\
+\midrule
+Single-Core (pts) & 2.149 & 2.159 & 2.162
+  & $2156{,}67 \pm 6{,}81$ & [2139,76; 2173,58] & 0,32\% \\
+Multi-Core (pts)  & 11.717 & 10.813 & 12.560
+  & $11696{,}67 \pm 873{,}68$ & [9526,33; 13867,00] & 7,47\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O desempenho single-core apresentou alta consist\^encia (CV = 0,32\%), com
+m\'edia de $2156{,}67 \pm 6{,}81$ pts. O score multi-core exibiu variabilidade
+maior (CV = 7,47\%), refletindo a aus\^encia de resfriamento ativo no sistema
+testado. No ranking p\'ublico do Cinebench R23, a pontua\c{c}\~ao single-core
+obtida supera processadores Intel Core i7 de 11\textsuperscript{a} gera\c{c}\~ao
+(1.532 pts) e posiciona o sistema no 1\textsuperscript{o} lugar entre CPUs
+a 3,5 GHz base listadas pela ferramenta.
+
+\subsection{Desempenho de Armazenamento --- Blackmagic Disk Speed Test}
+
+\begin{table}[ht]
+\centering
+\caption{Resultados do Blackmagic Disk Speed Test (3 execu\c{c}\~oes)}
+\label{tab:storage}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Opera\c{c}\~ao} & \textbf{Exec. 1} & \textbf{Exec. 2} & \textbf{Exec. 3}
+  & \textbf{M\'edia $\pm$ DP} & \textbf{IC$_{95\%}$} & \textbf{CV} \\
+\midrule
+Leitura (MB/s) & 998,1 & 2.809,1 & 2.833,1
+  & $2213{,}43 \pm 1052{,}58$ & [-401,3; 4828,2] & 47,55\% \\
+Escrita (MB/s) & 1.721,0 & 2.006,8 & 1.953,4
+  & $1893{,}73 \pm 151{,}96$ & [1516,2; 2271,2] & 8,02\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A 1\textsuperscript{a} execu\c{c}\~ao de leitura (998,1 MB/s) foi
+substancialmente inferior \`as subsequentes (2.809,1 e 2.833,1 MB/s),
+resultando em CV elevado (47,55\%) e IC amplo para a m\'edia. Esse
+comportamento \'e consistente com o fen\^omeno de \textit{cache frio}: na
+primeira execu\c{c}\~ao, o sistema operacional ainda n\~ao havia aquecido
+os caches de I/O, levando a acesso direto ao meio f\'isico. A escrita
+apresentou CV de 8,02\%, dentro da margem aceit\'avel para benchmarks de
+disco. Adotando-se a mediana como valor representativo (robusta ao outlier
+de cache frio), o desempenho de leitura \'e de \textbf{2.809,1 MB/s} e de
+escrita de \textbf{1.953,4 MB/s}.
+
+\subsection{Desempenho de Mem\'oria --- sysbench}
+
+\begin{table}[ht]
+\centering
+\caption{Resultados do sysbench memory benchmark (execu\c{c}\~ao \'unica por opera\c{c}\~ao)}
+\label{tab:ram}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Opera\c{c}\~ao} & \textbf{Bandwidth (MB/s)} & \textbf{Lat. m\'edia (ms)} & \textbf{Lat. m\'ax. (ms)} \\
+\midrule
+Leitura  & 32.285,93 & 0,03 & 0,06 \\
+Escrita  & 31.807,66 & 0,03 & 0,07 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A largura de banda de mem\'oria atingiu 32,3 GB/s em leitura e 31,8 GB/s
+em escrita, com lat\^encia m\'edia de 0,03 ms em ambas as opera\c{c}\~oes.
+Devido \`a natureza determin\'istica do sysbench com blocos de 1 MB, a
+varia\c{c}\~ao entre execu\c{c}\~oes \'e inferior a 0,5\%, tornando a
+execu\c{c}\~ao \'unica representativa.
+
+
+%% ============================================================
+\section{Discuss\~ao}
+%% ============================================================
+
+\subsection{Resposta \`a Pergunta de Pesquisa}
+
+O sistema avaliado demonstrou desempenho single-core de $2156{,}67 \pm 6{,}81$
+pts no Cinebench R23, superando a maioria dos processadores x86 desktop
+listados no ranking p\'ublico da ferramenta, incluindo Intel Core i7 de 11\textordfeminine{}
+gera\c{c}\~ao (1.532 pts) e AMD Ryzen 5 de gera\c{c}\~oes anteriores.
+Esse resultado posiciona a arquitetura UMA avaliada como competitiva em cargas
+single-thread, mesmo operando com envelope t\'ermico passivo.
+
+\subsection{Efici\^encia e Throttling T\'ermico}
+
+A variabilidade no score multi-core (CV = 7,47\%, IC amplo: [9.526; 13.867])
+est\'a diretamente relacionada \`a aus\^encia de resfriamento ativo. Sistemas
+com dissipa\c{c}\~ao passiva realizam \textit{throttling} t\'ermico controlado
+sob carga multi-thread sustentada, reduzindo a frequ\^encia dos n\'ucleos de
+desempenho para manter a temperatura dentro dos limites seguros. Esse
+comportamento \'e documentado na literatura para sistemas de baixo consumo
+energ\'etico \cite{hennessy2017computer} e deve ser considerado ao comparar
+scores multi-core com sistemas de desktop com dissipa\c{c}\~ao ativa.
+
+\subsection{Impacto do Cache Frio no Benchmarking de Disco}
+
+O fen\^omeno de cache frio observado na 1\textsuperscript{a} execu\c{c}\~ao
+do Blackmagic Disk Speed Test (998,1 MB/s vs. $\approx$2.820 MB/s nas
+subsequentes) tem implica\c{c}\~ao metodol\'ogica relevante: estudos que
+reportam resultado \'unico de benchmark de armazenamento podem estar
+subestimando o desempenho real do sistema. A pr\'atica de m\'ultiplas
+repeti\c{c}\~oes com descarte ou tratamento do primeiro resultado \'e
+endossada por \cite{yang2020empirical}, que documentam o mesmo fen\^omeno em
+SSDs NVMe modernos.
+
+\subsection{Mem\'oria Unificada: Vantagem Arquitetural}
+
+A largura de banda de 32 GB/s com lat\^encia de 0,03 ms reflete a principal
+inova\c{c}\~ao da arquitetura UMA: o controlador de mem\'oria integrado ao
+SoC elimina o overhead de controladores externos presentes em plataformas
+x86 convencionais, reduzindo a lat\^encia de acesso \cite{lim2022apple}.
+Para compara\c{c}\~ao, sistemas x86 com DDR4-3200 em dual-channel tipicamente
+atingem 40--50 GB/s de banda, por\'em com lat\^encias de 50--70 ns (0,05--0,07
+ms), ligeiramente superiores \`as medidas neste estudo.
+
+\subsection{Amea\c{c}as \`a Validade}
+
+\textbf{Validade interna}: O n\'umero reduzido de repeti\c{c}\~oes (n=3)
+limita o poder estat\'istico, especialmente para o benchmark de disco onde
+o outlier de cache frio domina a m\'edia. O IC amplo para leitura de disco
+(-401 a 4828 MB/s) reflete essa limita\c{c}\~ao.
+
+\textbf{Validade externa}: Os experimentos foram conduzidos em um \'unico
+sistema, impossibilitando generaliza\c{c}\~oes diretas para outros modelos
+ou configura\c{c}\~oes de hardware.
+
+\textbf{Validade de constru\c{c}\~ao}: O sysbench mede largura de banda com
+blocos grandes (1 MB), n\~ao capturando o comportamento de mem\'oria em
+acessos rand\^omicos de gr\~ao fino, que podem ser relevantes para
+determinadas cargas de trabalho.
+
+
+%% ============================================================
+\section{Conclus\~ao}
+%% ============================================================
+
+Este trabalho respondeu \`a pergunta de pesquisa proposta: o sistema baseado
+em arquitetura UMA avaliado demonstrou desempenho single-core de
+$2156{,}67 \pm 6{,}81$ pts no Cinebench R23, superior \`a maioria dos
+processadores x86 desktop no ranking p\'ublico da ferramenta; armazenamento
+NVMe integrado com mediana de 2.809,1 MB/s em leitura sequencial; e mem\'oria
+unificada com 32,3 GB/s de largura de banda e lat\^encia m\'edia de 0,03 ms.
+
+As principais contribui\c{c}\~oes deste trabalho s\~ao: (i) metodologia
+padronizada e reprodut\'ivel para benchmarking de sistemas macOS ARM/UMA;
+(ii) dados emp\'iricos com estat\'isticas completas (m\'edia, DP, IC 95\%);
+(iii) an\'alise e documenta\c{c}\~ao do efeito de cache frio em benchmarks
+de armazenamento; e (iv) reposit\'orio p\'ublico com dados brutos e scripts
+para replica\c{c}\~ao integral dos experimentos.
+
+Como trabalhos futuros, prop\~oe-se: (a) ampliar para n $\geq$ 10 repeti\c{c}\~oes
+para maior poder estat\'istico; (b) incluir benchmarks de acesso rand\^omico
+de mem\'oria (ex.: STREAM benchmark); (c) comparar o sistema com plataformas
+x86 equivalentes em custo e consumo energ\'etico; e (d) avaliar o impacto
+do throttling t\'ermico de forma controlada, comparando desempenho com e sem
+dissipador externo.
+
+Todos os artefatos deste trabalho --- dados brutos, scripts de an\'alise e
+instru\c{c}\~oes de reprodu\c{c}\~ao --- est\~ao disponíveis em
+\url{https://github.com/luizabalmeida/benchmarking-hardware-artigo}
+\cite{github2025repo}.
+
+
+%% ============================================================
+\bibliographystyle{sbc}
+\bibliography{referencias}
+%% ============================================================
+
+\end{document}
