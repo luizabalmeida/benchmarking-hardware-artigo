@@ -3,7 +3,7 @@
 Repositório de dados brutos, scripts de análise e instruções de reprodução do artigo científico:
 
 > **Benchmarking de CPU, Memória e Armazenamento em Sistemas com Arquitetura de Memória Unificada: Uma Avaliação Experimental**
-> Luiza Barbosa Almeida da Silva — CESAR School, 2025
+> Luiza Barbosa Almeida da Silva
 
 
 
@@ -62,7 +62,7 @@ pip install pandas scipy matplotlib
 python scripts/analise.py
 ```
 
-O script gera as estatísticas completas (média, desvio-padrão, IC 95%) e salva os gráficos em `figuras/`.
+O script gera as estatísticas completas (média, desvio-padrão, IC 95%).
 
 ---
 
@@ -71,5 +71,4 @@ O script gera as estatísticas completas (média, desvio-padrão, IC 95%) e salv
 ```
 SILVA, Luiza Barbosa Almeida da. Benchmarking de CPU, Memória e Armazenamento
 em Sistemas com Arquitetura de Memória Unificada: Uma Avaliação Experimental.
-CESAR School, Recife, 2025.
 ```
