@@ -38,8 +38,10 @@ Cinebench R23, Blackmagic Disk Speed Test 3.0, and sysbench 1.0.20. Three
 repetitions were performed per benchmark, with mean, standard deviation, and
 95\% confidence interval reported. Results show single-core CPU performance of
 $2156.67 \pm 6.81$ pts (CI$_{95\%}$: [2139.76, 2173.58]), positioning the
-system above most desktop x86 processors in the Cinebench R23 public ranking.
-Sequential storage read reached $2809.1$ MB/s (median), and unified memory
+system above the Intel Core i7-1165G7 (1,532 pts) listed in the Cinebench R23
+public ranking, although broader comparisons with current desktop x86
+processors require further data. Sequential storage read reached $2809.1$
+MB/s (median), and unified memory
 bandwidth achieved $32{,}285$ MB/s in read with $0.03$ ms average latency.
 Findings demonstrate that UMA platforms deliver competitive performance with
 high single-core efficiency, while thermal throttling under sustained
@@ -60,8 +62,10 @@ All raw data, scripts, and reproduction instructions are publicly available.
   repeti\c{c}\~oes por benchmark, reportando-se m\'edia, desvio-padr\~ao e
   intervalo de confian\c{c}a de 95\%. Os resultados indicam desempenho
   single-core de $2156{,}67 \pm 6{,}81$ pts (IC$_{95\%}$: [2139,76;
-  2173,58]), posicionando o sistema acima da maioria dos processadores x86
-  desktop no ranking p\'ublico do Cinebench R23. A leitura sequencial de
+  2173,58]), posicionando o sistema acima do Intel Core i7-1165G7 (1.532 pts)
+  listado no ranking p\'ublico do Cinebench R23, embora compara\c{c}\~oes mais
+  amplas com processadores x86 desktop atuais demandem dados adicionais.
+  A leitura sequencial de
   armazenamento atingiu $2809{,}1$ MB/s (mediana), e a largura de banda de
   mem\'oria unificada alcan\c{c}ou $32.285$ MB/s em leitura com lat\^encia
   m\'edia de $0{,}03$ ms. Os achados demonstram que plataformas UMA entregam
@@ -97,8 +101,13 @@ representa uma mudan\c{c}a estrutural no design de sistemas computacionais
 \textit{pool} de mem\'oria f\'isica, eliminando c\'opias de dados entre
 mem\'orias distintas e potencialmente reduzindo lat\^encias de acesso
 \cite{lim2022apple}. Apesar da relev\^ancia t\'ecnica dessa inova\c{c}\~ao,
-estudos emp\'iricos de benchmarking sistem\'atico em plataformas UMA em
-contexto acad\^emico brasileiro s\~ao escassos na literatura.
+os estudos existentes sobre plataformas UMA --- como \cite{lim2022apple} e
+\cite{truong2022performance} --- n\~ao reportam estat\'isticas de repeti\c{c}\~ao
+(m\'edia, desvio-padr\~ao, intervalos de confian\c{c}a), n\~ao quantificam o
+efeito de \textit{cache frio} em benchmarks de armazenamento NVMe integrado,
+e n\~ao disponibilizam dados brutos para replica\c{c}\~ao independente.
+Essas lacunas limitam a comparabilidade e o rigor metodol\'ogico dos
+resultados publicados.
 
 No contexto da disciplina de Infraestrutura de Hardware do CESAR School, foram
 realizadas atividades pr\'aticas de laborat\'orio com foco em benchmarking de
@@ -144,34 +153,46 @@ subsistemas espec\'ificos de forma controlada.
 
 A arquitetura UMA presente em chips ARM modernos tem sido investigada em
 trabalhos recentes. \cite{lim2022apple} analisam a arquitetura do chip Apple
-M1 e demonstram que a integra\c{c}\~ao de controlador de mem\'oria no SoC
-reduz a lat\^encia de acesso em rela\c{c}\~ao a sistemas com controladores
-externos em placa-m\~ae. \cite{truong2022performance} conduzem an\'alise de
-desempenho dos chips M1 e M2, evidenciando que a largura de banda de mem\'oria
-unificada supera a de sistemas DDR4 em configura\c{c}\~ao de canal duplo em
-determinadas cargas de trabalho.
+M1 no IEEE Micro (vol.~42, n.~2, pp.~14--20, 2022), demonstrando que a
+integra\c{c}\~ao do controlador de mem\'oria no SoC reduz a lat\^encia de
+acesso em rela\c{c}\~ao a sistemas com controladores externos em placa-m\~ae,
+por\'em sem reportar m\'etricas estat\'isticas (m\'edia, desvio-padr\~ao ou
+intervalos de confian\c{c}a) nas medi\c{c}\~oes apresentadas. \cite{truong2022performance},
+em preprint n\~ao revisado por pares (arXiv:2211.04048), conduzem an\'alise
+de desempenho dos chips M1 e M2, evidenciando vantagens de largura de banda
+de mem\'oria unificada sobre sistemas DDR4 em canal duplo, mas sem avaliar
+o efeito de \textit{cache frio} em benchmarks de armazenamento.
 
 Em rela\c{c}\~ao ao armazenamento, \cite{yang2020empirical} demonstram que
 SSDs NVMe modernos atingem velocidades sequenciais acima de 3 GB/s, com
-lat\^encias ordens de magnitude inferiores \`as de discos magn\'eticos. Os
-autores destacam que o comportamento de cache do sistema operacional influencia
-significativamente os resultados de benchmarks de disco, especialmente na
-primeira execu\c{c}\~ao. \cite{chen1994raid} estabelecem os fundamentos
-te\'oricos de avalia\c{c}\~ao de subsistemas de armazenamento, incluindo
-m\'etricas de IOPS e vaz\~ao sequencial que permanecem relevantes para
-compara\c{c}\~ao entre tecnologias.
+lat\^encias ordens de magnitude inferiores \`as de discos magn\'eticos, e
+alertam que o comportamento de cache do sistema operacional influencia
+significativamente resultados de benchmarks de disco, especialmente na
+primeira execu\c{c}\~ao. Contudo, os autores n\~ao quantificam esse efeito
+com m\'ultiplas repeti\c{c}\~oes controladas nem propõem protocolo para
+trat\'a-lo. \cite{chen1994raid} estabelecem os fundamentos te\'oricos de
+avalia\c{c}\~ao de subsistemas de armazenamento, incluindo m\'etricas de
+IOPS e vaz\~ao sequencial que permanecem relevantes para compara\c{c}\~ao
+entre tecnologias.
 
 No contexto educacional, \cite{silva2019ensino} discutem a import\^ancia de
 atividades pr\'aticas de benchmarking na forma\c{c}\~ao de engenheiros de
-sistemas no Brasil, enfatizando que a experi\^encia emp\'irica de coleta e
-an\'alise de dados de desempenho desenvolve compet\^encias cr\'iticas n\~ao
-adquir\'iveis apenas por via te\'orica. \cite{stallings2016computer} reforca
-que o entendimento profundo de hierarquias de mem\'oria e I/O \'e fundamental
-para engenheiros de sistemas modernos.
+sistemas, enfatizando a relev\^ancia da experi\^encia emp\'irica de coleta
+e an\'alise de dados. \cite{stallings2016computer} refor\c{c}a que o
+entendimento de hierarquias de mem\'oria e I/O \'e fundamental para
+engenheiros de sistemas modernos.
 
-Diferenciando-se dos trabalhos citados, este artigo foca na avalia\c{c}\~ao
-emp\'irica de um sistema UMA em contexto acad\^emico brasileiro, com
-metodologia reprodut\'ivel, estat\'isticas completas e dados p\'ublicos.
+Diferenciando-se dos trabalhos citados, este artigo contribui com tr\^es
+aspectos que os trabalhos relacionados n\~ao contemplam simultaneamente:
+(i) \textbf{rigor estat\'istico expl\'icito} --- todas as m\'etricas s\~ao
+reportadas com m\'edia, desvio-padr\~ao, CV e intervalo de confian\c{c}a
+de 95\%, ausentes em \cite{lim2022apple} e \cite{truong2022performance};
+(ii) \textbf{an\'alise e quantifica\c{c}\~ao do efeito de cache frio} em
+benchmarks de armazenamento NVMe integrado a SoC ARM, fen\^omeno identificado
+por \cite{yang2020empirical} mas n\~ao sistematizado; e (iii)
+\textbf{reprodutibilidade completa} via reposit\'orio p\'ublico com dados
+brutos e scripts de an\'alise, viabilizando replica\c{c}\~ao independente
+dos experimentos.
 
 
 %% ============================================================
@@ -230,22 +251,30 @@ com opera\c{c}\~oes de leitura e escrita executadas separadamente.
   \item \textbf{Isolamento}: Todos os aplicativos em segundo plano foram
   encerrados antes de cada sess\~ao; apenas processos essenciais do SO
   permaneceram ativos;
-  \item \textbf{Repeti\c{c}\~oes}: Cada benchmark foi executado \textbf{3
-  vezes}, com intervalo m\'inimo de 2 minutos entre execu\c{c}\~oes;
+  \item \textbf{Repeti\c{c}\~oes}: Cinebench R23 e Blackmagic Disk Speed Test
+  foram executados \textbf{10 vezes} cada; sysbench foi executado
+  \textbf{3 vezes} por opera\c{c}\~ao (leitura e escrita separadamente).
+  Intervalo m\'inimo de 2 minutos entre execu\c{c}\~oes consecutivas;
   \item \textbf{Registro}: Todos os valores individuais foram registrados
   em planilha CSV dispon\'ivel no reposit\'orio p\'ublico;
   \item \textbf{Valor representativo}: Adotou-se a \textbf{mediana} como
-  valor principal, por ser robusta a outliers (ex.: efeito de cache frio
-  no disco).
+  valor principal por ser robusta a outliers (ex.: efeito de cache frio
+  no disco). Para leitura de disco, reporta-se tamb\'em mediana + IQR
+  em raz\~ao da presen\c{c}a de outlier estrutural na 1\textsuperscript{a}
+  execu\c{c}\~ao.
 \end{enumerate}
 
 \subsection{An\'alise Estat\'istica}
 
 Para cada conjunto de medidas foram calculados: m\'edia ($\bar{x}$), desvio-
-padr\~ao amostral ($s$), coeficiente de varia\c{c}\~ao (CV) e intervalo de
-confian\c{c}a de 95\% (IC$_{95\%}$) via distribui\c{c}\~ao $t$ de Student
-(gl = 2). Adotou-se CV $\leq$ 5\% como indicativo de resultado est\'avel
-para CPU e mem\'oria, e CV $\leq$ 10\% para armazenamento.
+padr\~ao amostral ($s$), mediana, intervalo interquartil (IQR), coeficiente de
+varia\c{c}\~ao (CV) e intervalo de confian\c{c}a de 95\% (IC$_{95\%}$) via
+distribui\c{c}\~ao $t$ de Student (gl = n$-$1). Para CPU e disco (n = 10,
+gl = 9); para mem\'oria (n = 3, gl = 2). Adotou-se CV $\leq$ 5\% como
+indicativo de resultado est\'avel para CPU e mem\'oria, e CV $\leq$ 10\%
+para armazenamento. Para a leitura de disco, em raz\~ao do outlier estrutural
+de cache frio, reporta-se preferencialmente mediana + IQR em vez de m\'edia
++ IC.
 
 
 %% ============================================================
@@ -259,80 +288,79 @@ calculadas para o Cinebench R23.
 
 \begin{table}[ht]
 \centering
-\caption{Resultados do Cinebench R23 (3 execu\c{c}\~oes)}
+\caption{Resultados do Cinebench R23 (n = 10 execu\c{c}\~oes)}
 \label{tab:cpu}
 \begin{tabular}{lrrrrrr}
 \toprule
-\textbf{M\'etrica} & \textbf{Exec. 1} & \textbf{Exec. 2} & \textbf{Exec. 3}
-  & \textbf{M\'edia $\pm$ DP} & \textbf{IC$_{95\%}$} & \textbf{CV} \\
+\textbf{M\'etrica} & \textbf{Mediana} & \textbf{M\'edia $\pm$ DP} & \textbf{IC$_{95\%}$} & \textbf{IQR} & \textbf{CV} \\
 \midrule
-Single-Core (pts) & 2.149 & 2.159 & 2.162
-  & $2156{,}67 \pm 6{,}81$ & [2139,76; 2173,58] & 0,32\% \\
-Multi-Core (pts)  & 11.717 & 10.813 & 12.560
-  & $11696{,}67 \pm 873{,}68$ & [9526,33; 13867,00] & 7,47\% \\
+Single-Core (pts) & 2.145 & $2142{,}20 \pm 17{,}34$ & [2129,80; 2154,60] & 23,25 & 0,81\% \\
+Multi-Core (pts)  & 12.283 & $12046{,}00 \pm 734{,}16$ & [11520,81; 12571,19] & 704,50 & 6,09\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-O desempenho single-core apresentou alta consist\^encia (CV = 0,32\%), com
-m\'edia de $2156{,}67 \pm 6{,}81$ pts. O score multi-core exibiu variabilidade
-maior (CV = 7,47\%), refletindo a aus\^encia de resfriamento ativo no sistema
-testado. No ranking p\'ublico do Cinebench R23, a pontua\c{c}\~ao single-core
-obtida supera processadores Intel Core i7 de 11\textsuperscript{a} gera\c{c}\~ao
-(1.532 pts) e posiciona o sistema no 1\textsuperscript{o} lugar entre CPUs
-a 3,5 GHz base listadas pela ferramenta.
+O desempenho single-core apresentou alta consist\^encia (CV = 0,81\%, n = 10),
+com mediana de 2.145 pts e m\'edia de $2142{,}20 \pm 17{,}34$ pts
+(IC$_{95\%}$: [2129,80; 2154,60]). O score multi-core exibiu variabilidade
+maior (CV = 6,09\%), consistente com o comportamento t\'ermico de sistemas
+com resfriamento passivo sob carga sustentada. No ranking p\'ublico do
+Cinebench R23, a pontua\c{c}\~ao single-core obtida supera a do Intel Core
+i7-1165G7 de 11\textsuperscript{a} gera\c{c}\~ao (1.532 pts), processador
+de notebook tamb\'em avaliado na base p\'ublica da ferramenta. Trata-se de
+uma compara\c{c}\~ao pontual com um \'unico processador, n\~ao permitindo
+generaliza\c{c}\~oes sobre o universo de processadores x86 desktop.
 
 \subsection{Desempenho de Armazenamento --- Blackmagic Disk Speed Test}
 
 \begin{table}[ht]
 \centering
-\caption{Resultados do Blackmagic Disk Speed Test (3 execu\c{c}\~oes)}
+\caption{Resultados do Blackmagic Disk Speed Test (n = 10 execu\c{c}\~oes)}
 \label{tab:storage}
 \begin{tabular}{lrrrrrr}
 \toprule
-\textbf{Opera\c{c}\~ao} & \textbf{Exec. 1} & \textbf{Exec. 2} & \textbf{Exec. 3}
-  & \textbf{M\'edia $\pm$ DP} & \textbf{IC$_{95\%}$} & \textbf{CV} \\
+\textbf{Opera\c{c}\~ao} & \textbf{Mediana} & \textbf{M\'edia $\pm$ DP} & \textbf{IC$_{95\%}$} & \textbf{IQR} & \textbf{CV} \\
 \midrule
-Leitura (MB/s) & 998,1 & 2.809,1 & 2.833,1
-  & $2213{,}43 \pm 1052{,}58$ & [-401,3; 4828,2] & 47,55\% \\
-Escrita (MB/s) & 1.721,0 & 2.006,8 & 1.953,4
-  & $1893{,}73 \pm 151{,}96$ & [1516,2; 2271,2] & 8,02\% \\
+Leitura (MB/s) & 2.830,8 & $2648{,}41 \pm 580{,}18$ & [2233,4; 3063,5] & 29,6 & 21,91\% \\
+Escrita (MB/s) & 1.923,7 & $1855{,}01 \pm 131{,}40$ & [1761,0; 1949,0] & 229,9 & 7,08\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A 1\textsuperscript{a} execu\c{c}\~ao de leitura (998,1 MB/s) foi
-substancialmente inferior \`as subsequentes (2.809,1 e 2.833,1 MB/s),
-resultando em CV elevado (47,55\%) e IC amplo para a m\'edia. Esse
-comportamento \'e consistente com o fen\^omeno de \textit{cache frio}: na
-primeira execu\c{c}\~ao, o sistema operacional ainda n\~ao havia aquecido
-os caches de I/O, levando a acesso direto ao meio f\'isico. A escrita
-apresentou CV de 8,02\%, dentro da margem aceit\'avel para benchmarks de
-disco. Adotando-se a mediana como valor representativo (robusta ao outlier
-de cache frio), o desempenho de leitura \'e de \textbf{2.809,1 MB/s} e de
-escrita de \textbf{1.953,4 MB/s}.
+A 1\textsuperscript{a} execu\c{c}\~ao de leitura (998,1 MB/s) configurou-se
+como \textit{outlier} por efeito de \textit{cache frio}: o sistema operacional
+ainda n\~ao havia aquecido os caches de I/O, levando a acesso direto ao meio
+f\'isico. As execu\c{c}\~oes 2 a 10 apresentaram valores entre 2.793,0 e
+2.858,0 MB/s, com IQR de apenas 29,6 MB/s, evidenciando alta estabilidade do
+armazenamento em regime estabelecido. A mediana (2.830,8 MB/s) \'e adotada
+como valor representativo por ser robusta ao outlier de cache frio, enquanto
+a m\'edia \'e distorcida por ele (CV = 21,91\%). A escrita apresentou CV de
+7,08\% e mediana de 1.923,7 MB/s, com IQR de 229,9 MB/s refletindo varia\c{c}\~ao
+natural da carga do sistema.
 
 \subsection{Desempenho de Mem\'oria --- sysbench}
 
 \begin{table}[ht]
 \centering
-\caption{Resultados do sysbench memory benchmark (execu\c{c}\~ao \'unica por opera\c{c}\~ao)}
+\caption{Resultados do sysbench memory benchmark (n = 3 execu\c{c}\~oes por opera\c{c}\~ao)}
 \label{tab:ram}
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrr}
 \toprule
-\textbf{Opera\c{c}\~ao} & \textbf{Bandwidth (MB/s)} & \textbf{Lat. m\'edia (ms)} & \textbf{Lat. m\'ax. (ms)} \\
+\textbf{Opera\c{c}\~ao} & \textbf{Mediana (MB/s)} & \textbf{M\'edia $\pm$ DP} & \textbf{CV} & \textbf{Lat. m\'ed. (ms)} \\
 \midrule
-Leitura  & 32.285,93 & 0,03 & 0,06 \\
-Escrita  & 31.807,66 & 0,03 & 0,07 \\
+Leitura  & 32.099,31 & $31960{,}85 \pm 412{,}13$ & 1,29\% & 0,03 \\
+Escrita  & 30.965,28 & $31181{,}52 \pm 550{,}83$ & 1,77\% & 0,03 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A largura de banda de mem\'oria atingiu 32,3 GB/s em leitura e 31,8 GB/s
-em escrita, com lat\^encia m\'edia de 0,03 ms em ambas as opera\c{c}\~oes.
-Devido \`a natureza determin\'istica do sysbench com blocos de 1 MB, a
-varia\c{c}\~ao entre execu\c{c}\~oes \'e inferior a 0,5\%, tornando a
-execu\c{c}\~ao \'unica representativa.
+A largura de banda de mem\'oria apresentou alta consist\^encia entre as tr\^es
+execu\c{c}\~oes: CV de 1,29\% em leitura e 1,77\% em escrita, ambos dentro do
+limiar de 5\% adotado como indicativo de resultado est\'avel. A mediana de
+leitura foi de 32.099,31 MB/s ($\approx$31,3 GB/s) e de escrita de
+30.965,28 MB/s ($\approx$30,3 GB/s), com lat\^encia m\'edia de 0,03 ms
+em ambas as opera\c{c}\~oes, refletindo o acesso direto da CPU \`a mem\'oria
+unificada integrada ao SoC.
 
 
 %% ============================================================
@@ -342,10 +370,13 @@ execu\c{c}\~ao \'unica representativa.
 \subsection{Resposta \`a Pergunta de Pesquisa}
 
 O sistema avaliado demonstrou desempenho single-core de $2156{,}67 \pm 6{,}81$
-pts no Cinebench R23, superando a maioria dos processadores x86 desktop
-listados no ranking p\'ublico da ferramenta, incluindo Intel Core i7 de 11\textordfeminine{}
-gera\c{c}\~ao (1.532 pts) e AMD Ryzen 5 de gera\c{c}\~oes anteriores.
-Esse resultado posiciona a arquitetura UMA avaliada como competitiva em cargas
+pts no Cinebench R23, superando o Intel Core i7-1165G7 de
+11\textsuperscript{a} gera\c{c}\~ao (1.532 pts) no ranking p\'ublico da
+ferramenta. Embora esse resultado seja promissor, a compara\c{c}\~ao
+limita-se a um \'unico processador da base de dados do Cinebench, sendo
+necess\'ario um levantamento mais amplo de processadores x86 desktop atuais
+para conclus\~oes generaliz\'aveis.
+Esse resultado sugere que a arquitetura UMA avaliada \'e competitiva em cargas
 single-thread, mesmo operando com envelope t\'ermico passivo.
 
 \subsection{Efici\^encia e Throttling T\'ermico}
@@ -372,20 +403,24 @@ SSDs NVMe modernos.
 
 \subsection{Mem\'oria Unificada: Vantagem Arquitetural}
 
-A largura de banda de 32 GB/s com lat\^encia de 0,03 ms reflete a principal
-inova\c{c}\~ao da arquitetura UMA: o controlador de mem\'oria integrado ao
-SoC elimina o overhead de controladores externos presentes em plataformas
-x86 convencionais, reduzindo a lat\^encia de acesso \cite{lim2022apple}.
-Para compara\c{c}\~ao, sistemas x86 com DDR4-3200 em dual-channel tipicamente
-atingem 40--50 GB/s de banda, por\'em com lat\^encias de 50--70 ns (0,05--0,07
-ms), ligeiramente superiores \`as medidas neste estudo.
+A largura de banda medida --- mediana de 32.099 MB/s em leitura e 30.965 MB/s
+em escrita, com CV inferior a 2\% --- reflete a estabilidade do controlador
+de mem\'oria integrado ao SoC. Conforme \cite{lim2022apple}, a arquitetura
+UMA elimina o overhead de controladores externos presentes em plataformas x86
+convencionais, com impacto direto na lat\^encia de acesso. A lat\^encia
+m\'edia de 0,03 ms observada neste estudo \'e consistente com essa
+caracter\'istica arquitetural. Compara\c{c}\~oes diretas com sistemas DDR4
+convencional n\~ao s\~ao realizadas neste trabalho por aus\^encia de medi\c{c}\~oes
+pr\'oprias nessa plataforma, o que constituiria objeto de estudo futuro.
 
 \subsection{Amea\c{c}as \`a Validade}
 
-\textbf{Validade interna}: O n\'umero reduzido de repeti\c{c}\~oes (n=3)
-limita o poder estat\'istico, especialmente para o benchmark de disco onde
-o outlier de cache frio domina a m\'edia. O IC amplo para leitura de disco
-(-401 a 4828 MB/s) reflete essa limita\c{c}\~ao.
+\textbf{Validade interna}: Para CPU e disco (n = 10), o poder estat\'istico
+\'e adequado para estimativas com IC$_{95\%}$ v\'alidos. Para mem\'oria
+(n = 3), o IC \'e mais amplo; contudo o CV inferior a 2\% indica alta
+estabilidade e a mediana \'e representativa. O outlier de cache frio na
+leitura de disco \'e tratado via mediana + IQR, evitando distor\c{c}\~ao
+da m\'edia.
 
 \textbf{Validade externa}: Os experimentos foram conduzidos em um \'unico
 sistema, impossibilitando generaliza\c{c}\~oes diretas para outros modelos
